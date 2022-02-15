@@ -1,0 +1,70 @@
+body{
+    background-color: rgb(211, 211, 211);
+}
+h1{
+    text-align: center;
+    font-size: 30px;    
+    padding: 40px;
+}
+.login_from{
+    text-align: center;
+    font-size: 19px;
+    margin:0 auto;
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px 40px;
+    width: 500px;
+}
+.from{
+    text-align: center;
+    font-size: 19px;
+    margin:0 auto;
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px 40px;
+    width: 80%;
+}
+.form-select{
+    width: 200px;
+}
+.login>.from>h2{
+    text-align: center;
+    font-size: 30px;
+    margin: 20px;
+}
+/* 勤怠詳細一覧の1行目 */
+.bg-light{
+    background-color: rgb(230, 230, 230) !important;
+}
+.modal-header .btn-close{
+    margin: 0;
+    padding: 0;
+}
+.modal-footer{
+    justify-content: center;
+}
+
+/* ——————————————————— 
+管理画面*/
+
+.from_user_list{
+    text-align: center;
+    font-size: 19px;
+    margin:0 auto;
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px 40px;
+    width: 50%;
+}
+
+
+/* ———————————————————
+アニメーション
+ */
+
+.underline{
+    text-decoration: none;
+}
+.underline:hover{
+    text-decoration: underline;
+}
