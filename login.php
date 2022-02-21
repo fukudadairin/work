@@ -1,9 +1,16 @@
 <!-- 
 var_dump();
-→これじゃないと配列の中身は見れない -->
+→これじゃないと配列の中身は見れない 
+
+echo "<pre>";
+echo "</pre>";
+→これで配列の中身を開業
+
+-->
 
 <?php
 require_once(dirname(__FILE__) . "/config/config.php");
+require_once(dirname(__FILE__) . "/function.php");
 session_start();
 
 if(isset($_SESSION["user"]) == true){
@@ -28,17 +35,14 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
   }
   if (empty($err)) {
     // 3BD接続
-    $param = "mysql:dbname=" . DB_NAME . ";host=" . DB_HOST;
-    $pdo  = new PDO($param, DB_USER, DB_PASSWORD);
-    $pdo->query("SET NAMES utf8;");
-
-    $sql = "SELECT login_id,login_password FROM user WHERE login_id = :login_id AND login_password = :login_password LIMIT 1";
+    $pdo  = connect_db();
+    $sql = "SELECT * FROM user WHERE login_id = :login_id AND login_password = :login_password LIMIT 1";
     $stmt = $pdo->prepare($sql);
     // sql文で入力された値を使う準備
-    $stmt->bindValue(":login_id", $login_id, PDO::PARAM_STR);
+    $stmt->bindValue(":login_id", $login_id, PDO::PARAM_INT);
     $stmt->bindValue(":login_password", $login_password, PDO::PARAM_STR);
     $stmt->execute();
-    $user = $stmt->fetch(PDO::FETCH_UNIQUE);
+    $user = $stmt->fetch();
 
     if ($user) {
     // ログイン処理

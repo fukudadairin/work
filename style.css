@@ -24,6 +24,10 @@ h1{
     padding: 20px 40px;
     width: 80%;
 }
+.modal_from{
+    text-align: center;
+    font-size: 19px;
+}
 .form-select{
     width: 200px;
 }
@@ -32,6 +36,7 @@ h1{
     font-size: 30px;
     margin: 20px;
 }
+
 /* 勤怠詳細一覧の1行目 */
 .bg-light{
     background-color: rgb(230, 230, 230) !important;
