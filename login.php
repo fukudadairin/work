@@ -6,6 +6,9 @@ echo "<pre>";
 echo "</pre>";
 →これで配列の中身を開業
 
+fetchAll()のPDO::FETCH_UNIQUEは、
+DBの最初の列にある値で、それぞれの行毎に連番をふる
+
 -->
 
 <?php

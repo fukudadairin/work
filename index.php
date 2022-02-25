@@ -5,6 +5,9 @@ date_default_timezone_set('Asia/Tokyo');
 require_once(dirname(__FILE__) . "/config/config.php");
 require_once(dirname(__FILE__) . "/function.php");
 session_start();
+$modal_time = date("n");
+$modal_target = "";
+
 
 if (!isset($_SESSION["user"]) == true) {
     header("Location:/r40208/login.php");
@@ -22,17 +25,6 @@ $day_count = date("t", strtotime($yyyymm));
 $session_user = $_SESSION["user"];
 $pdo  = connect_db();
 $modal_flag = true;
-
-
-// データベースから情報を引き抜いて一覧に表示
-
-$sql = "SELECT date,id,start_time,end_time,break_time,comment FROM work WHERE login_id =:login_id AND DATE_FORMAT(date,'%Y-%m')=:date";
-$stmt = $pdo->prepare($sql); //どれを使うのかを決める→SELECT文：INSERT文：UPDATE文：DELETE文：
-$stmt->bindValue(":login_id", (int)$session_user["id"], PDO::PARAM_INT);
-$stmt->bindValue(":date", $yyyymm, PDO::PARAM_STR);
-$stmt->execute();
-$work_list = $stmt->fetchAll(PDO::FETCH_UNIQUE);
-
 
 
 // 今日の日報が登録されてなかったらモーダル表示
@@ -67,17 +59,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $modal_end_time = $_POST["modal_end_time"];
     $modal_break_time = $_POST["modal_break_time"];
     $modal_comment = $_POST["modal_comment"];
+    $modal_target = $_POST["modal_target"];
+    // 編集ボタンを押された日にち：2222−22−22
 
-    if ($today_work) {
+    $sql = "SELECT date,login_id,start_time,end_time,break_time,comment FROM work WHERE login_id =:aa AND date=:date limit 1";
+    $stmt = $pdo->prepare($sql); //どれを使うのかを決める→SELECT文：INSERT文：UPDATE文：DELETE文：
+    $stmt->bindValue(":aa", (int)$session_user["id"], PDO::PARAM_INT);
+    if ($modal_target === date("Y-m-d")) {
+        $stmt->bindValue(":date", date("Y-m-d"), PDO::PARAM_STR);
+    } else {
+        $stmt->bindValue(":date", $modal_target, PDO::PARAM_STR);
+    }
+    $stmt->execute();
+    $target = $stmt->fetch();
+    $target_comment = $target["comment"];
+
+    echo "<pre>";
+    echo "target_comment";
+    var_dump($target_comment);
+    echo "</pre>";
+
+
+    if ($target) {
         var_dump("UPDATE");
-        $sql = "UPDATE work SET start_time =:start_time, end_time =:end_time, break_time =:break_time, comment =:comment WHERE id = :id";
+        $sql = "UPDATE work SET start_time =:start_time, end_time =:end_time, break_time =:break_time, comment =:comment WHERE login_id = :login_id AND date=:date";
         $stmt = $pdo->prepare($sql);
-        $stmt->bindValue(":id", (int)$today_work["id"], PDO::PARAM_INT); // データベースに接続
-        if ($modal_start_time === "") {
-            $stmt->bindValue(":start_time", null, PDO::PARAM_NULL);
-        } else {
-            $stmt->bindValue(':start_time', $modal_start_time, PDO::PARAM_STR);
-        };
+        $stmt->bindValue(":login_id", (int)$target["login_id"], PDO::PARAM_INT); // データベースに接続
+        $stmt->bindValue(":date", $modal_target, PDO::PARAM_STR);
+        $stmt->bindValue(':start_time', $modal_start_time, PDO::PARAM_STR);
         if ($modal_end_time === "") {
             $stmt->bindValue(":end_time", null, PDO::PARAM_NULL);
         } else {
@@ -88,15 +97,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->execute(); // 実行
 
 
+
     } else {
         var_dump("INSERT");
         $sql = "INSERT INTO work(login_id,date,start_time,end_time,break_time,comment)VALUES(:login_id,:date,:start_time,:end_time,:break_time,:comment)";
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':login_id', (int)$session_user['id'], PDO::PARAM_INT);
-        if (empty($target_date)) {
+        if (empty($modal_target)) {
             $stmt->bindValue(":date", date("Y-m-d"), PDO::PARAM_STR);
         } else {
-            $stmt->bindValue(':date', $target_date, PDO::PARAM_STR);
+            $stmt->bindValue(':date', $modal_target, PDO::PARAM_STR);
         }
         if ($modal_start_time === "") {
             $stmt->bindValue(":start_time", null, PDO::PARAM_NULL);
@@ -117,33 +127,56 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->execute(); // 実行
 
     }
-    if($modal_start_time && $modal_end_time){
+    if ($modal_start_time && $modal_end_time) {
         $modal_flag = false;
     }
+}
 
 
+// データベースから情報を引き抜いて一覧に表示
+
+$sql = "SELECT date,id,start_time,end_time,break_time,comment FROM work WHERE login_id =:login_id AND DATE_FORMAT(date,'%Y-%m')=:date";
+$stmt = $pdo->prepare($sql); //どれを使うのかを決める→SELECT文：INSERT文：UPDATE文：DELETE文：
+$stmt->bindValue(":login_id", (int)$session_user["id"], PDO::PARAM_INT);
+$stmt->bindValue(":date", $yyyymm, PDO::PARAM_STR);
+$stmt->execute();
+$work_list = $stmt->fetchAll(PDO::FETCH_UNIQUE);
+
+
+
+// 検証パーツ
 echo "<pre>";
+if ($modal_target) {
+    var_dump($modal_target);
+}
 var_dump($modal_start_time);
 var_dump($modal_end_time);
 var_dump($modal_break_time);
 var_dump($modal_comment);
+
+
+// var_dump($modal_start_time);
+// var_dump($modal_end_time);
+// var_dump($modal_break_time);
+// var_dump($modal_comment);
 echo "</pre>";
-}
-
-// 検証パーツ
-// echo "<pre>";
-// var_dump($modal_start_time);
-// var_dump($modal_end_time);
-// var_dump($modal_break_time);
-// var_dump($modal_comment);
 
 
-// var_dump($modal_start_time);
-// var_dump($modal_end_time);
-// var_dump($modal_break_time);
-// var_dump($modal_comment);
-// echo "</pre>";
+echo "<pre>";
+// $target_comment = array('abc','def');
+var_dump($target_comment);
+echo "</pre>";
 
+
+echo "aaaaaa";
+$jsonTarget_comment = json_encode($target_comment); //JavaScriptに渡すためにjson_encodeを行う 
+echo "<pre>";
+var_dump($jsonTarget_comment);
+echo "</pre>";
+
+
+
+var_dump($modal_flag);
 ?>
 
 <!DOCTYPE html>
@@ -156,14 +189,12 @@ echo "</pre>";
     <link rel="stylesheet" href="./reset.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
     <link rel="stylesheet" href="./style.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 </head>
 
 <body>
     <h1>勤怠管理</h1>
 
-    <section class="aaa">
+    <section class="target_month">
         <form action="./index.php" class="from">
             <h2>月別リスト</h2>
             <select class="form-select mb-3" aria-label="Default select example" name="m" onchange="submit(this.from)">
@@ -178,12 +209,12 @@ echo "</pre>";
             <table class="table">
                 <thead>
                     <tr class="bg-light">
-                        <th scope="col" class="fw-bold col-2">日付</th>
-                        <th scope="col" class="fw-bold col-2">出勤</th>
-                        <th scope="col" class="fw-bold col-2">退勤</th>
-                        <th scope="col" class="fw-bold col-2">休憩時間</th>
-                        <th scope="col" class="fw-bold col-4">勤務内容</th>
-                        <th scope="col" class="fw-bold col-1"></th>
+                        <th scope="col" class="text-center fw-bold col-2">日付</th>
+                        <th scope="col" class="text-center fw-bold col-2">出勤</th>
+                        <th scope="col" class="text-center fw-bold col-2">退勤</th>
+                        <th scope="col" class="text-center fw-bold col-2">休憩時間</th>
+                        <th scope="col" class="text-center fw-bold col-4">勤務内容</th>
+                        <th scope="col" class="text-center fw-bold col-1"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -208,19 +239,20 @@ echo "</pre>";
                                 $break_time = date("H:i", strtotime($work["break_time"]));
                             }
                             if ($work["comment"]) {
-                                $comment = mb_strimwidth($work["comment"], 0, 30, "..");
+                                // $comment = mb_strimwidth($work["comment"], 0, 30, "..");
                                 // 日本語を含むマルチバイト文字は2文字としてカウントされますので、「10」で指定した場合「…」分を引いた「8」で丸められ、全てマルチバイト文字なので4文字分の「こんにち」が丸められていることになります。
+                                $comment = $work["comment"];
                             }
                         }
                         ?>
 
                         <tr>
-                            <th scope="row"><?= time_format_dw($yyyymm . "-" . $i) ?></th>
-                            <td><?= $start_time ?></td>
-                            <td><?= $end_time ?></td>
-                            <td><?= $break_time ?></td>
-                            <td><?= $comment ?></td>
-                            <td><button type="button" class="btn py-0" data-bs-toggle="modal" data-bs-target="#inputModal" data-day ="<?= $yyyymm . "-".sprintf("%02d",$i)?> ">●</button></td>
+                            <th class="text-center" scope="row"><?= time_format_dw($yyyymm . "-" . $i) ?></th>
+                            <td class="text-center"><?= $start_time ?></td>
+                            <td class="text-center"><?= $end_time ?></td>
+                            <td class="text-center"><?= $break_time ?></td>
+                            <td class="with-max px-4"><?= $comment ?></td>
+                            <td><button type="button" class="btn py-0" data-bs-toggle="modal" data-bs-target="#inputModal" data-day="<?= $yyyymm . "-" . $i ?> " data-target_month="<?= $modal_time ?>/">●</button></td>
                         </tr>
                     <?php endfor; ?>
                 </tbody>
@@ -237,10 +269,10 @@ echo "</pre>";
                             <h5 class="modal-title text-center fw-bold" id="exampleModalLongTitle">勤怠入力</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
                         </div>
-                        <div class="alert alert-primary" role="alert">
+                        <div id="modal_day" class="alert alert-primary" role="alert">
                             <?= date("n") . "/" . time_format_dw(date("Y-m-d")) ?>
                         </div>
-                     
+
                         <div class="modal-body">
                             <div class="container">
                                 <div class="row">
@@ -255,29 +287,30 @@ echo "</pre>";
                                     <div class="col">
                                         <div class="input-group">
                                             <input id="modal_end_time" type="text" class="form-control" placeholder="退勤" aria-label="退勤" aria-describedby="basic-addon1" name="modal_end_time" value="<?php if ($modal_end_time) {
-                                                                                                                                                                                                                echo date("H:i", strtotime($modal_end_time));
-                                                                                                                                                                                                            }else{
+                                                                                                                                                                                                            echo date("H:i", strtotime($modal_end_time));
+                                                                                                                                                                                                        } else {
 
-                                                                                                                                                                                                                echo $modal_end_time;
-                                                                                                                                                                                                            } ?>">
+                                                                                                                                                                                                            echo $modal_end_time;
+                                                                                                                                                                                                        } ?>">
                                             <button type="button" class="input-group-text end_btn">打刻</button>
                                         </div>
                                     </div>
                                     <div class="col">
                                         <div class="input-group">
                                             <input type="text" class="form-control" placeholder="休憩時間" aria-label="休憩時間" aria-describedby="basic-addon1" name="modal_break_time" value="<?php if ($modal_break_time) {
-                                                                                                                                                                                                                echo date("G:i", strtotime($modal_break_time));
-                                                                                                                                                                                                            }else{
+                                                                                                                                                                                            echo date("G:i", strtotime($modal_break_time));
+                                                                                                                                                                                        } else {
 
-                                                                                                                                                                                                                echo $modal_break_time;
-                                                                                                                                                                                                            } ?>">
+                                                                                                                                                                                            echo $modal_break_time;
+                                                                                                                                                                                        } ?>">
                                         </div>
                                     </div>
                                 </div>
                                 <div class="my-3">
-                                    <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" placeholder="業務内容" aria-label="業務内容" name="modal_comment"><?= $modal_comment ?></textarea>
+                                    <textarea class="form-control" id="modal_comment" rows="3" placeholder="業務内容" aria-label="業務内容" name="modal_comment"><?= $modal_comment ?></textarea>
                                 </div>
                             </div>
+                            <input type="hidden" id="modal_target" name="modal_target">
                         </div>
 
                         <div class="modal-footer">
@@ -286,23 +319,58 @@ echo "</pre>";
                     </div>
                 </div>
             </div>
+
         </form>
     </section>
 
-    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+    <script src="./script.js"></script>
     <script>
         <?php if ($modal_flag) {  ?>
             var inputModal = new bootstrap.Modal(document.getElementById("inputModal"));
             inputModal.toggle();
         <?php  }; ?>
-        // $(".start_btn").click(function() {
-        //     const now = new Date();
-        //     const hour = now.getHours().toString().padStart(2, "0");
-        //     const minuit = now.getMinutes().toString().padStart(2, "0");
-        //     $("#modal_start_time").val(hour + ":" + minuit);
-        // });
+
+        var sample = JSON.parse('<?php echo $jsonTarget_comment; ?>'); //jsonをparseしてJavaScriptの変数に代入
+        console.log(sample,"sample");
+
+        $("#inputModal").on("show.bs.modal", function(event) {
+            // show.bs.modal：モーダル・ダイアログを開くshowメソッドを呼び出した時のイベント。
+            var button = $(event.relatedTarget);
+            var target_day = button.data("day");
+            console.log(target_day);
+
+            var day = button.closest("tr").children("th")[0].innerText;
+            var target_month = button.data("target_month");
+            // console.log(day); 
+            // console.log(target_month); 
+
+            var start_time = button.closest("tr").children("td")[0].innerText
+            var end_time = button.closest("tr").children("td")[1].innerText
+            var break_time = button.closest("tr").children("td")[2].innerText
+            var comment = button.closest("tr").children("td")[3].innerText
+            // console.log(start_time); 
+            // console.log(comment); 
+
+            var comment = button.closest("tr").children("td")[3].innerText
+
+            $("#modal_day").text(target_month + day)
+            $("#modal_target").val(target_day)
+            $("#modal_start_time").val(start_time)
+            $("#modal_end_time").val(end_time)
+            $("#modal_break_time").val(break_time)
+            $("#modal_comment").val(comment)
+            // $("#modal_comment").val(sample)
+            $("#target_date").val(target_day)
+
+            // $("#modal_start_time").removeClass("is-invalid")
+            // $("#modal_end_time").removeClass("is-invalid")
+            // $("#modal_break_time").removeClass("is-invalid")
+            // $("#modal_comment").removeClass("is-invalid")
+
+        });
     </script>
-    <script src="./script.js"></script>
 </body>
 
 </html>
