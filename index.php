@@ -7,8 +7,6 @@ require_once(dirname(__FILE__) . "/config/config.php");
 require_once(dirname(__FILE__) . "/function.php");
 session_start();
 
-// 
-$modal_time = date("n");
 // jsで編集ボタンをクリックした日にち
 $modal_target = "";
 
@@ -24,8 +22,10 @@ $modal_flag = true;
 
 if (isset($_GET["m"])) {
     $yyyymm = $_GET["m"];
+    $modal_month = date("n", strtotime($yyyymm));
 } else {
     $yyyymm = date('Y-m');
+    $modal_month = date("n", strtotime($yyyymm));
 }
 
 if ($yyyymm != date('Y-m')) {
@@ -240,7 +240,7 @@ echo "</pre>";
                             <td class="text-center"><?= $end_time ?></td>
                             <td class="text-center"><?= $break_time ?></td>
                             <td class="with-max px-4"><?= $comment ?></td>
-                            <td><button type="button" class="btn py-0" data-bs-toggle="modal" data-bs-target="#inputModal" data-day="<?= $yyyymm . "-" . $i ?> " data-target_month="<?= $modal_time ?>/">●</button></td>
+                            <td><button type="button" class="btn py-0" data-bs-toggle="modal" data-bs-target="#inputModal" data-day="<?= $yyyymm . "-" . $i ?> " data-target_month="<?= $modal_month ?>/">●</button></td>
                         </tr>
                     <?php endfor; ?>
                 </tbody>
@@ -258,7 +258,7 @@ echo "</pre>";
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
                         </div>
                         <div id="modal_day" class="alert alert-primary" role="alert">
-                            <?= date("n") . "/" . time_format_dw(date("Y-m-d")) ?>
+                            <?= $modal_month . "/" . time_format_dw(date("Y-m-d")) ?>
                         </div>
 
                         <div class="modal-body">
