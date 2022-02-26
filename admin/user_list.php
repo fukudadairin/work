@@ -1,3 +1,39 @@
+<?php
+echo "<pre>";
+
+require_once(dirname(__FILE__) . "/../config/config.php");
+require_once(dirname(__FILE__) . "/../function.php");
+session_start();
+
+
+$pdo  = connect_db();
+$sql = "SELECT id,login_id,name,login_password,auth_type FROM user ";
+$stmt = $pdo->prepare($sql);
+$stmt->execute();
+$admin_all_user = $stmt->fetchAll(PDO::FETCH_UNIQUE);
+$_SESSION["admin_all_user"] = $admin_all_user;
+$admin_all_user = $_SESSION["admin_all_user"];
+
+
+$pdo  = connect_db();
+$sql = "SELECT COUNT(*) FROM user";
+$stmt = $pdo->prepare($sql);
+$stmt->execute();
+$admin_listCount = $stmt->fetch();
+$_SESSION["admin_listCount"] = $admin_listCount;
+$admin_listCount = $_SESSION["admin_listCount"];
+$admin_listCount = $admin_listCount["COUNT(*)"];
+
+// 検証用
+// var_dump($admin_all_user);
+// var_dump($admin_all_user[$i]);
+// var_dump($_SESSION);
+
+echo "</pre>";
+
+?>
+
+
 <!DOCTYPE html>
 <html lang="ja">
 
@@ -14,20 +50,36 @@
     <h1 class="text-white">勤怠管理</h1>
 
     <section class="aaa">
-        <form action="./index.php" class="from_user_list">
+        <form action="./index.php" class="admin_user_list">
             <h2>社員リスト</h2>
             <table class="table">
                 <thead>
                     <tr class="bg-light">
-                        <th scope="col" class="fw-bold">社員番号</th>
-                        <th scope="col" class="fw-bold">社員名</th>
+                        <th scope="col" class="fw-bold text-center">社員番号</th>
+                        <th scope="col" class="fw-bold text-center">社員名</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <th scope="row">1</th>
-                        <td><a href="/r40208/admin/user_result.php" class="underline">田中　マルクス</a></td>
-                    </tr>
+                    <?php for ($i = 1; $i <= $admin_listCount; $i++) : ?>
+                        <?php
+
+                        $admin_login_id = "";
+                        $admin_login_name = "";
+
+                        $admin_user = $admin_all_user[$i];
+
+                        // $list = $admin_user["login_id"];
+                        // echo "———————————————————";
+                        // var_dump($admin_user);
+                        ?>
+
+                        <tr>
+                            <th scope="row" class="text-center"><?= $admin_user["login_id"] ?></th>
+                            <td class="text-center"><a href="/r40208/admin/user_result.php" class="underline"><?= $admin_user["name"] ?></a></td>
+                        </tr>
+
+                    <?php endfor; ?>
+
                 </tbody>
             </table>
 

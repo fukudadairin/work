@@ -50,8 +50,8 @@ h1 {
 }
 
 /* ——————————————————— 
+一般ユーザー
 管理画面*/
-
 .from_user_list {
     text-align: center;
     font-size: 19px;
@@ -60,6 +60,18 @@ h1 {
     border-radius: 10px;
     padding: 20px 40px;
     width: 50%;
+}
+/* ——————————————————— 
+管理者
+管理画面*/
+.admin_user_list {
+    text-align: center;
+    font-size: 19px;
+    margin: 0 auto;
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px 40px;
+    width: 550px;
 }
 
 /* ———————————————————

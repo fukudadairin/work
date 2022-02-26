@@ -1,29 +1,45 @@
 <?php
+echo "<pre>";
 require_once(dirname(__FILE__) . "/../config/config.php");
 require_once(dirname(__FILE__) . "/../function.php");
 session_start();
 
-if (isset($_SESSION["user"]) == true) {
+if (isset($_SESSION["admin"]) == true) {
   header("Location:/r40208/admin/user_list.php");
   exit;
 }
+$admin_login = "";
+$admin_password = "";
 
-// DBの情報を取得
-$pdo  = connect_db();
-$sql = "SELECT date,login_id,start_time,end_time,break_time,comment FROM user WHERE login_id =:login_id AND date=:date limit 1";
-$stmt = $pdo->prepare($sql); //どれを使うのかを決める→SELECT文：INSERT文：UPDATE文：DELETE文：
-$stmt->bindValue(":login_id", (int)$session_user["id"], PDO::PARAM_INT);
-$stmt->bindValue(":date", date("Y-m-d"), PDO::PARAM_STR);
-$stmt->bindValue(":date", $modal_target, PDO::PARAM_STR);
-$stmt->execute();
-$target = $stmt->fetch();
+if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
-// 入力情報とDBの情報を照合
+  $admin_login = $_POST["admin_login"];
+  $admin_password = $_POST["admin_password"];
 
-// 情報が一致したら「user_list.php」へ画面遷移
+  // DBの情報を取得
+  // 入力情報とDBの情報を照合
+  $pdo  = connect_db();
+  $sql = "SELECT * FROM user WHERE login_id =:login_id AND login_password=:login_password AND auth_type=:auth_type limit 1";
+  $stmt = $pdo->prepare($sql);
+  $stmt->bindValue(":login_id", (int)$admin_login, PDO::PARAM_INT);
+  $stmt->bindValue(":login_password", $admin_password, PDO::PARAM_STR);
+  $stmt->bindValue(":auth_type", 1, PDO::PARAM_STR);
+  $stmt->execute();
+  $admin_login = $stmt->fetch();
+  $_SESSION["admin"] = $admin_login;
+  $admin = $_SESSION["admin"];
+
+  // 情報が一致したら「user_list.php」へ画面遷移
+  if ($admin) {
+    header("Location:/r40208/admin/user_list.php");
+    exit;
+  } else {
+    $admin_err_password = "パスワードが間違ってます";
+  }
+}
 
 
-
+echo "</pre>";
 ?>
 
 <!DOCTYPE html>
@@ -43,13 +59,18 @@ $target = $stmt->fetch();
 <body class="bg-success">
   <h1 class="text-white">勤怠管理</h1>
   <section class="login">
-    <form class="login_from" >
+    <form class="login_from" method="POST">
       <h2 class="fs-2 mt-3 mb-4">Login</h2>
       <div class="mb-3">
-        <input type="email" class="form-control" placeholder="社員番号" name="">
+        <input type="text" class="form-control" placeholder="社員番号" name="admin_login" value="<?= $admin_login ?>">
       </div>
       <div class="mb-3">
-        <input type="password" class="form-control" placeholder="パスワード">
+        <input type="password" class="form-control <?php if (isset($admin_err_password)) {
+                                                      echo "is-invalid";
+                                                    } ?>" placeholder="パスワード" name="admin_password">
+        <div class="invalid-feedback">
+          <?= $admin_err_password ?>
+        </div>
       </div>
       <button type="submit" class="btn btn-primary">ログイン</button>
     </form>
