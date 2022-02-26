@@ -1,66 +1,50 @@
 <!-- ログイン状態の確認 -->
 <?php
+echo "<pre>";
 
 date_default_timezone_set('Asia/Tokyo');
 require_once(dirname(__FILE__) . "/config/config.php");
 require_once(dirname(__FILE__) . "/function.php");
 session_start();
-$modal_time = date("n");
-$modal_target = "";
 
+// 
+$modal_time = date("n");
+// jsで編集ボタンをクリックした日にち
+$modal_target = "";
 
 if (!isset($_SESSION["user"]) == true) {
     header("Location:/r40208/login.php");
     exit;
 }
 
-if (isset($_GET["m"])) {
-    $yyyymm = $_GET["m"];
-} else {
-    $yyyymm = date('Y-m');
-}
-$day_count = date("t", strtotime($yyyymm));
-
 // 各種設定で必要
 $session_user = $_SESSION["user"];
 $pdo  = connect_db();
 $modal_flag = true;
 
-
-// 今日の日報が登録されてなかったらモーダル表示
-$sql = "SELECT date,id,start_time,end_time,break_time,comment FROM work WHERE login_id =:login_id AND DATE_FORMAT(date,'%Y-%m-%d')=:date limit 1";
-$stmt = $pdo->prepare($sql); //どれを使うのかを決める→SELECT文：INSERT文：UPDATE文：DELETE文：
-$stmt->bindValue(":login_id", (int)$session_user["id"], PDO::PARAM_INT);
-$stmt->bindValue(":date", date('Y-m-d'), PDO::PARAM_STR);
-$stmt->execute();
-$today_work = $stmt->fetch();
-
-
-if ($today_work) {
-    $modal_start_time = $today_work["start_time"];
-    $modal_end_time = $today_work["end_time"];
-    $modal_break_time = $today_work["break_time"];
-    $modal_comment = $today_work["comment"];
-
-    if ($modal_start_time && $modal_end_time) {
-        $modal_flag = false;
-    }
+if (isset($_GET["m"])) {
+    $yyyymm = $_GET["m"];
 } else {
-    $modal_start_time = null;
-    $modal_end_time = null;
-    $modal_break_time = "01:00";
-    $modal_comment = null;
+    $yyyymm = date('Y-m');
 }
 
+if ($yyyymm != date('Y-m')) {
+    $modal_flag = false;
+}
+
+$day_count = date("t", strtotime($yyyymm));
+
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // echo "POST送信";
     // $_SERVER["REQUEST_METHOD"] 現在のページにアクセスする際に使用されたメソッド（GETやメソッド）
 
     $modal_start_time = $_POST["modal_start_time"];
     $modal_end_time = $_POST["modal_end_time"];
     $modal_break_time = $_POST["modal_break_time"];
     $modal_comment = $_POST["modal_comment"];
+    // jsで編集ボタンをクリックした日にち
     $modal_target = $_POST["modal_target"];
-    // 編集ボタンを押された日にち：2222−22−22
 
     $sql = "SELECT date,login_id,start_time,end_time,break_time,comment FROM work WHERE login_id =:aa AND date=:date limit 1";
     $stmt = $pdo->prepare($sql); //どれを使うのかを決める→SELECT文：INSERT文：UPDATE文：DELETE文：
@@ -72,16 +56,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     $stmt->execute();
     $target = $stmt->fetch();
-    $target_comment = $target["comment"];
+    // $target_comment = $target["comment"];
 
-    echo "<pre>";
-    echo "target_comment";
-    var_dump($target_comment);
-    echo "</pre>";
+    // 
+    // echo "target_comment";
+    // var_dump($target_comment);
+    // 
 
 
     if ($target) {
-        var_dump("UPDATE");
+        // var_dump("UPDATE");
         $sql = "UPDATE work SET start_time =:start_time, end_time =:end_time, break_time =:break_time, comment =:comment WHERE login_id = :login_id AND date=:date";
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(":login_id", (int)$target["login_id"], PDO::PARAM_INT); // データベースに接続
@@ -99,7 +83,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 
     } else {
-        var_dump("INSERT");
+        // var_dump("INSERT");
         $sql = "INSERT INTO work(login_id,date,start_time,end_time,break_time,comment)VALUES(:login_id,:date,:start_time,:end_time,:break_time,:comment)";
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':login_id', (int)$session_user['id'], PDO::PARAM_INT);
@@ -127,9 +111,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->execute(); // 実行
 
     }
-    if ($modal_start_time && $modal_end_time) {
-        $modal_flag = false;
-    }
+} else {
+    // echo "GET送信";
 }
 
 
@@ -142,41 +125,46 @@ $stmt->bindValue(":date", $yyyymm, PDO::PARAM_STR);
 $stmt->execute();
 $work_list = $stmt->fetchAll(PDO::FETCH_UNIQUE);
 
+// 今日の日報が登録されてなかったらモーダル表示
+$sql = "SELECT date,id,start_time,end_time,break_time,comment FROM work WHERE login_id =:login_id AND DATE_FORMAT(date,'%Y-%m-%d')=:date limit 1";
+$stmt = $pdo->prepare($sql); //どれを使うのかを決める→SELECT文：INSERT文：UPDATE文：DELETE文：
+$stmt->bindValue(":login_id", (int)$session_user["id"], PDO::PARAM_INT);
+$stmt->bindValue(":date", date('Y-m-d'), PDO::PARAM_STR);
+$stmt->execute();
+$today_work = $stmt->fetch();
+
+
+if ($today_work) {
+    $modal_start_time = $today_work["start_time"];
+    $modal_end_time = $today_work["end_time"];
+    $modal_break_time = $today_work["break_time"];
+    $modal_comment = $today_work["comment"];
+
+    if ($modal_start_time && $modal_end_time) {
+        $modal_flag = false;
+    }
+} else {
+    $modal_start_time = null;
+    $modal_end_time = null;
+    $modal_break_time = "01:00";
+    $modal_comment = null;
+}
 
 
 // 検証パーツ
-echo "<pre>";
-if ($modal_target) {
-    var_dump($modal_target);
-}
-var_dump($modal_start_time);
-var_dump($modal_end_time);
-var_dump($modal_break_time);
-var_dump($modal_comment);
-
 
 // var_dump($modal_start_time);
 // var_dump($modal_end_time);
 // var_dump($modal_break_time);
 // var_dump($modal_comment);
+// var_dump($modal_target);
+
+// echo "jsonTest";
+// $jsonTarget_comment = json_encode($target_comment); //JavaScriptに渡すためにjson_encodeを行う 
+// 
+// var_dump($jsonTarget_comment);
+// 
 echo "</pre>";
-
-
-echo "<pre>";
-// $target_comment = array('abc','def');
-var_dump($target_comment);
-echo "</pre>";
-
-
-echo "aaaaaa";
-$jsonTarget_comment = json_encode($target_comment); //JavaScriptに渡すためにjson_encodeを行う 
-echo "<pre>";
-var_dump($jsonTarget_comment);
-echo "</pre>";
-
-
-
-var_dump($modal_flag);
 ?>
 
 <!DOCTYPE html>
@@ -332,8 +320,10 @@ var_dump($modal_flag);
             inputModal.toggle();
         <?php  }; ?>
 
-        var sample = JSON.parse('<?php echo $jsonTarget_comment; ?>'); //jsonをparseしてJavaScriptの変数に代入
-        console.log(sample,"sample");
+
+        // var sample = JSON.parse(''); 
+        //jsonをparseしてJavaScriptの変数に代入
+        // console.log(sample, "sample");
 
         $("#inputModal").on("show.bs.modal", function(event) {
             // show.bs.modal：モーダル・ダイアログを開くshowメソッドを呼び出した時のイベント。
