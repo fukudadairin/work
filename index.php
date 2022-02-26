@@ -2,7 +2,6 @@
 <?php
 echo "<pre>";
 
-date_default_timezone_set('Asia/Tokyo');
 require_once(dirname(__FILE__) . "/config/config.php");
 require_once(dirname(__FILE__) . "/function.php");
 session_start();
@@ -183,7 +182,7 @@ echo "</pre>";
     <h1>勤怠管理</h1>
 
     <section class="target_month">
-        <form action="./index.php" class="from">
+        <form class="from">
             <h2>月別リスト</h2>
             <select class="form-select mb-3" aria-label="Default select example" name="m" onchange="submit(this.from)">
                 <option value="<?= date("Y-m") ?>"><?= date("Y/m") ?></option>
