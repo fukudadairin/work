@@ -57,6 +57,7 @@ echo "</pre>";
                     <tr class="bg-light">
                         <th scope="col" class="fw-bold text-center">社員番号</th>
                         <th scope="col" class="fw-bold text-center">社員名</th>
+                        <th scope="col" class="fw-bold text-center">権限</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -65,7 +66,6 @@ echo "</pre>";
 
                         $admin_login_id = "";
                         $admin_login_name = "";
-
                         $admin_user = $admin_all_user[$i];
 
                         // $list = $admin_user["login_id"];
@@ -75,7 +75,12 @@ echo "</pre>";
 
                         <tr>
                             <th scope="row" class="text-center"><?= $admin_user["login_id"] ?></th>
-                            <td class="text-center"><a href="/r40208/admin/user_result.php" class="underline"><?= $admin_user["name"] ?></a></td>
+                            <td class="text-center"><a href="/r40208/admin/user_result.php?login_id=<?= $admin_user["login_id"] ?>"><?= $admin_user["name"] ?></a></td>
+                            <td class="text-center"><?php if ($admin_user["auth_type"] ==1) {
+                                                        echo "管理者";
+                                                    } else {
+                                                        echo "社員";
+                                                    } ?></td>
                         </tr>
 
                     <?php endfor; ?>

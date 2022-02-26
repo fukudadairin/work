@@ -1,3 +1,37 @@
+<?php
+echo "<pre>";
+
+require_once(dirname(__FILE__) . "/../config/config.php");
+require_once(dirname(__FILE__) . "/../function.php");
+session_start();
+$pdo  = connect_db();
+
+$admin_loginID = $_GET["login_id"];
+
+
+if (isset($_GET["m"])) {
+    $select_month = $_GET["m"];
+} else {
+    $select_month = date('Y-m');
+}
+
+var_dump($admin_loginID);
+var_dump($select_month);
+
+
+$sql = "SELECT date,id,start_time,end_time,break_time,comment FROM work WHERE login_id =:login_id AND DATE_FORMAT(date,'%Y-%m')=:date";
+$stmt = $pdo->prepare($sql);
+$stmt->bindValue(":login_id", (int)$admin_loginID, PDO::PARAM_INT);
+$stmt->bindValue(":date", $select_month, PDO::PARAM_STR);
+$stmt->execute();
+$work_list = $stmt->fetchAll(PDO::FETCH_UNIQUE);
+// var_dump($work_list);
+
+$day_count = date("t", strtotime($select_month));
+
+echo "</pre>";
+?>
+
 <!DOCTYPE html>
 <html lang="ja">
 
@@ -14,80 +48,67 @@
     <h1 class="text-white">勤怠管理</h1>
 
     <section class="aaa">
-        <form action="./index.php" class="from">
+        <form class="from" name="m">
             <h2>月別リスト</h2>
-            <select class="form-select mb-3" aria-label="Default select example">
-                <option value="2022年1月" selected>2022年2月</option>
-                <option value="2022年1月" selected>2022年2月</option>
-                <option value="2022年1月" selected>2022年2月</option>
+            <select class="form-select mb-3" aria-label="Default select example" name="m" onchange="submit(this.from)">
+                <option value="<?= date("Y-m") ?>"><?= date("Y/m") ?></option>
+                <?php
+                for ($i = 1; $i < 7; $i++) :
+                    $old_month = "-{$i}month";
+                ?>
+                    <option value="<?= date("Y-m", strtotime($old_month)) ?>" <?php if($select_month ==date("Y-m", strtotime($old_month))) echo "selected"; ?>><?= date("Y/m", strtotime($old_month)) ?></option>
+                <?php endfor; ?>
             </select>
+
             <table class="table">
                 <thead>
                     <tr class="bg-light">
-                        <th scope="col" class="fw-bold">日付</th>
-                        <th scope="col" class="fw-bold">出勤</th>
-                        <th scope="col" class="fw-bold">退勤</th>
-                        <th scope="col" class="fw-bold">休憩時間</th>
-                        <th scope="col" class="fw-bold">勤務内容</th>
-                        <th scope="col" class="fw-bold"></th>
+                        <th scope="col" class="text-center fw-bold col-2">日付</th>
+                        <th scope="col" class="text-center fw-bold col-2">出勤</th>
+                        <th scope="col" class="text-center fw-bold col-2">退勤</th>
+                        <th scope="col" class="text-center fw-bold col-2">休憩時間</th>
+                        <th scope="col" class="text-center fw-bold col-4">勤務内容</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <th scope="row">12日</th>
-                        <td>9：00</td>
-                        <td>18：00</td>
-                        <td>1：00</td>
-                        <td>＝＝＝＝＝＝＝</td>
-                        <td><button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#exampleModalLong">●</button></td>
-                        <!-- モーダルの設定 -->
-                        <div class="modal fade" id="exampleModalLong" tabindex="-1" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <p></p>
-                                        <h5 class="modal-title text-center fw-bold" id="exampleModalLongTitle">勤怠入力</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
-                                    </div>
-                                    <div class="alert alert-primary" role="alert">
-                                        2月11日（水）
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="container">
-                                            <div class="row">
-                                                <div class="col">
-                                                    <div class="input-group">
-                                                        <input type="text" class="form-control" placeholder="出勤" aria-label="出勤" aria-describedby="basic-addon1" value="">
-                                                    </div>
-                                                </div>
-                                                <div class="col">
-                                                    <div class="input-group">
-                                                        <input type="text" class="form-control" placeholder="退勤" aria-label="退勤" aria-describedby="basic-addon1" value="">
-                                                    </div>
-                                                </div>
-                                                <div class="col">
-                                                    <div class="input-group">
-                                                        <input type="text" class="form-control" placeholder="休憩時間" aria-label="休憩時間" aria-describedby="basic-addon1" value="1：00">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="my-3">
-                                                <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" placeholder="業務内容" aria-label="業務内容"></textarea>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-primary">修正</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </tr>
+                    <?php for ($i=1; $i <= $day_count; $i++) : ?>
+                        <?php
+                        $start_time = "";
+                        $end_time = "";
+                        $break_time = "";
+                        $comment = "";
+                        if (isset($work_list[date("Y-m-d", strtotime($select_month . "-" . $i))])) {
+                            $work = $work_list[date("Y-m-d", strtotime($select_month . "-" . $i))];
+                            if ($work["start_time"]) {
+                                // ??はnull合体演算子と呼ばれている。これはnullかどうかを確認することができる。
+                                $start_time = date("H:i", strtotime($work["start_time"]));
+                            }
+                            if ($work["end_time"]) {
+                                $end_time = date("H:i", strtotime($work["end_time"]));
+                            }
+                            if ($work["break_time"]) {
+                                $break_time = date("H:i", strtotime($work["break_time"]));
+                            }
+                            if ($work["comment"]) {
+                                // 日本語を含むマルチバイト文字は2文字としてカウントされますので、「10」で指定した場合「…」分を引いた「8」で丸められ、全てマルチバイト文字なので4文字分の「こんにち」が丸められていることになります。
+                                $comment = $work["comment"];
+                            }
+                        }
+                        ?>
+
+                        <tr>
+                            <th class="text-center" scope="row"><?= time_format_dw($select_month . "-" . $i) ?></th>
+                            <td class="text-center"><?= $start_time ?></td>
+                            <td class="text-center"><?= $end_time ?></td>
+                            <td class="text-center"><?= $break_time ?></td>
+                            <td class="with-max px-4"><?= $comment ?></td>
+                        </tr>
+                    <?php endfor; ?>
                 </tbody>
             </table>
-
-
         </form>
+
+
     </section>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
