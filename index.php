@@ -184,7 +184,7 @@ echo "</pre>";
     <section class="target_month">
         <form class="from">
             <h2>月別リスト</h2>
-            <select class="form-select mb-3" aria-label="Default select example" name="m" onchange="submit(this.from)">
+            <select class="form-select rounded-pill mb-3" aria-label="Default select example" name="m" onchange="submit(this.from)">
                 <option value="<?= date("Y-m") ?>"><?= date("Y/m") ?></option>
                 <?php for ($i = 1; $i <= 12; $i++) : ?>
                     <?php $target_yyyymm = strtotime("-{$i}months"); ?>
