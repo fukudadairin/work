@@ -158,11 +158,6 @@ if ($today_work) {
 // var_dump($modal_comment);
 // var_dump($modal_target);
 
-// echo "jsonTest";
-// $jsonTarget_comment = json_encode($target_comment); //JavaScriptに渡すためにjson_encodeを行う 
-// 
-// var_dump($jsonTarget_comment);
-// 
 echo "</pre>";
 ?>
 
@@ -320,10 +315,7 @@ echo "</pre>";
         <?php  }; ?>
 
 
-        // var sample = JSON.parse(''); 
-        //jsonをparseしてJavaScriptの変数に代入
-        // console.log(sample, "sample");
-
+       
         $("#inputModal").on("show.bs.modal", function(event) {
             // show.bs.modal：モーダル・ダイアログを開くshowメソッドを呼び出した時のイベント。
             var button = $(event.relatedTarget);
