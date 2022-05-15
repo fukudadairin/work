@@ -39,15 +39,15 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
   if (empty($err)) {
     // 3BD接続
     $pdo  = connect_db();
-    $sql = "SELECT * FROM user WHERE login_id = :login_id AND login_password = :login_password LIMIT 1";
+    $sql = "SELECT * FROM user WHERE login_id = :login_id LIMIT 1";
     $stmt = $pdo->prepare($sql);
     // sql文で入力された値を使う準備
     $stmt->bindValue(":login_id", $login_id, PDO::PARAM_INT);
-    $stmt->bindValue(":login_password", $login_password, PDO::PARAM_STR);
     $stmt->execute();
     $user = $stmt->fetch();
 
-    if ($user) {
+    // if ($user) {
+      if ($user && password_verify($login_password, $user["login_password"])) {
     // ログイン処理
       $_SESSION["user"] = $user;
       header("Location:/r40208/");
