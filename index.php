@@ -63,7 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // 
 
 
-    
+
     if ($target) {
         // var_dump("UPDATE");
         $sql = "UPDATE work SET start_time =:start_time, end_time =:end_time, break_time =:break_time, comment =:comment WHERE login_id = :login_id AND date=:date";
@@ -79,8 +79,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->bindValue(":break_time", $modal_break_time, PDO::PARAM_STR);
         $stmt->bindValue(":comment", $modal_comment, PDO::PARAM_STR);
         $stmt->execute(); // 実行
-
-
 
     } else {
         // var_dump("INSERT");
